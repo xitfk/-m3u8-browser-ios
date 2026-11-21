@@ -1,0 +1,42 @@
+name: Build Unsigned IPA
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Download project zip
+        run: |
+          curl -L -o project.zip "https://zip4.tempfilestorage.link/public/2026-11-21/34449987-eb5e-4367-9cd7-86a55a3bdc04/super_doubao_38455316628290562_1795226942.zip"
+          unzip -q project.zip
+
+      - name: List schemes
+        run: |
+          xcodebuild -list
+
+      - name: Build Xcode project (no signing)
+        run: |
+          xcodebuild -project *.xcodeproj \
+            -scheme "-m3u8-browser-ios" \
+            -configuration Release \
+            -sdk iphoneos \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Find built IPA
+        run: |
+          find . -name "*.ipa"
+
+      - name: Upload unsigned IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: m3u8-browser-ios-unsigned
+          path: |
+            build/Release-iphoneos/*.ipa
